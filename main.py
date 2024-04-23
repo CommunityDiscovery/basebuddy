@@ -18,13 +18,15 @@ from streamlit_modal import Modal
 import streamlit.components.v1 as components
 from st_keyup import st_keyup
 
+st.set_page_config(page_title="BaseBuddy")
+
 # Note that this, which is gitignored, is also excluded from gcloud builds.
 # For that reason, and cleanliness, that DB has been copied to a data/ directory.
 COCOPUTS_DB_FNAME = "data/cocoput_table.tsv"
 COCOPUTS_INDEX_FNAME = "data/cocoput_index.csv"
 
 
-@st.experimental_singleton
+@st.cache_resource
 def get_cocoput_organism_index():
     """Load an index of all organisms available in the CoCoPuts database."""
     df = pd.read_csv(COCOPUTS_INDEX_FNAME, index_col=False)
@@ -34,7 +36,7 @@ def get_cocoput_organism_index():
     )
 
 
-@st.experimental_singleton
+@st.cache_resource
 def get_cocoput_organism_list():
     """Return the index as a list."""
     return get_cocoput_organism_index().tolist()
@@ -95,7 +97,7 @@ def convert_cocoputs_table_to_dnachisel(
     return new_codon_table
 
 
-@st.experimental_memo
+@st.cache_data
 def get_codon_table_for_taxid(taxid):
     """Return the CoCoPuts codon usage table for the given TaxID."""
     df = pd.read_csv(COCOPUTS_DB_FNAME, sep="\t", index_col=False)
@@ -106,7 +108,7 @@ def get_codon_table_for_taxid(taxid):
     return convert_cocoputs_table_to_dnachisel(codon_table)
 
 
-st.set_page_config(page_title="BaseBuddy")
+#st.set_page_config(page_title="BaseBuddy")
 
 c1, c2, c3 = st.columns((1, 5, 1))
 with c2:

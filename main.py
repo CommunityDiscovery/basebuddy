@@ -4,7 +4,7 @@ import pandas as pd
 from io import StringIO
 import re
 from datetime import datetime
-
+import tarfile
 
 import numpy
 
@@ -22,9 +22,9 @@ st.set_page_config(page_title="BaseBuddy")
 
 # Note that this, which is gitignored, is also excluded from gcloud builds.
 # For that reason, and cleanliness, that DB has been copied to a data/ directory.
-COCOPUTS_DB_FNAME = "data/cocoput_table.tsv"
+COCOPUTS_DB_FNAME = "data/cocoput_table.tsv.tar.gz"
 COCOPUTS_INDEX_FNAME = "data/cocoput_index.csv"
-
+COCOPUTS_DB_TAR_GZ_FNAME = "data/cocoput_table.tsv.tar.gz"
 
 @st.cache_resource
 def get_cocoput_organism_index():
@@ -97,10 +97,16 @@ def convert_cocoputs_table_to_dnachisel(
     return new_codon_table
 
 
-@st.cache_data
+@st.cache_resource
 def get_codon_table_for_taxid(taxid):
     """Return the CoCoPuts codon usage table for the given TaxID."""
-    df = pd.read_csv(COCOPUTS_DB_FNAME, sep="\t", index_col=False)
+    # Extract the contents of the tar.gz file
+    with tarfile.open(COCOPUTS_DB_TAR_GZ_FNAME, "r:gz") as tar:
+        tar.extractall(path="data/")  # Extract to the "data" directory
+
+    # Now read the CSV file inside the extracted directory
+    extracted_csv_file = "data/cocoput_table.tsv"
+    df = pd.read_csv(extracted_csv_file, sep="\t", index_col=False)
     subset = df[df.Taxid == taxid]
     row = subset[subset["# CDS"] == subset["# CDS"].max()].iloc[0]
     codons = [a + b + c for a in "ATCG" for b in "ATCG" for c in "ATCG"]
